@@ -62,6 +62,7 @@ footer {
 }
 
 /* ====== Tetris App Styles ====== */
+.tetris-app { margin: 8px; }
 .tetris-app .topbar {
   display: flex;
   align-items: center;

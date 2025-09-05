@@ -117,6 +117,7 @@
   let dropCounter = 0;
   let softDropping = false;
   let baseDrop = 1000;
+  let animTime = 0; // used for crazy color hue shift
 
   let theme = "dark";
 
@@ -165,6 +166,16 @@
   function getNewPieceColor(t) {
     if (document.body.classList.contains("theme-crazy")) return brightColor();
     return getPalette()[t];
+  }
+
+  // Dynamic crazy color that hue-shifts over time, similar to background animation
+  const TYPE_HUE_OFFSETS = { I: 0, J: 52, L: 104, O: 156, S: 208, T: 260, Z: 312 };
+  const CRAZY_HUE_SPEED = 0.03; // deg per ms => 360deg in ~12s
+
+  function crazyColorFor(type) {
+    const base = TYPE_HUE_OFFSETS[type] || 0;
+    const hue = (animTime * CRAZY_HUE_SPEED + base) % 360;
+    return `hsl(${hue} 85% 55%)`;
   }
 
   // Queue / Bag
@@ -396,12 +407,11 @@
         const cell = board[y][x];
         if (!cell) continue;
         let color;
+        const tcell = typeof cell === "object" ? cell.type : cell;
         if (document.body.classList.contains("theme-crazy")) {
-          if (typeof cell === "object" && cell.color) color = cell.color;
-          else color = brightColor();
+          color = crazyColorFor(tcell);
         } else {
-          const t = typeof cell === "object" ? cell.type : cell;
-          color = getPalette()[t];
+          color = getPalette()[tcell];
         }
         drawCell(ctx, x * BLOCK, y * BLOCK, color);
       }
@@ -412,13 +422,16 @@
 
   function drawPiece() {
     const m = piece.matrix;
+    const color = document.body.classList.contains("theme-crazy")
+      ? crazyColorFor(piece.type)
+      : piece.color;
     for (let y = 0; y < m.length; y++) {
       for (let x = 0; x < m[y].length; x++) {
         if (!m[y][x]) continue;
         const px = (piece.x + x) * BLOCK;
         const py = (piece.y + y) * BLOCK;
         if (py + BLOCK <= 0) continue;
-        drawCell(ctx, px, py, piece.color);
+        drawCell(ctx, px, py, color);
       }
     }
   }
@@ -438,7 +451,9 @@
     const m = piece.matrix;
     const gx = piece.x;
     const gy = piece.y + d;
-    const color = piece.color;
+    const color = document.body.classList.contains("theme-crazy")
+      ? crazyColorFor(piece.type)
+      : piece.color;
     for (let y = 0; y < m.length; y++) {
       for (let x = 0; x < m[y].length; x++) {
         if (!m[y][x]) continue;
@@ -531,6 +546,7 @@
   function update(t = 0) {
     const dt = t - lastTime;
     lastTime = t;
+    animTime = t;
 
     if (running && !paused) {
       dropCounter += dt;
@@ -541,6 +557,9 @@
           lockPiece();
         }
       }
+      drawBoard();
+    } else if (document.body.classList.contains("theme-crazy")) {
+      // keep animating colors even when idle to match background
       drawBoard();
     }
     requestAnimationFrame(update);

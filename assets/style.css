@@ -94,7 +94,7 @@ footer {
 .game {
   display: flex;
   gap: 1.2rem;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: center;
 }
 
@@ -105,11 +105,19 @@ canvas#board {
   image-rendering: pixelated;
 }
 
+/* Scale mini canvases to fit panel width */
+.panel canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
   min-width: 180px;
+  overflow: auto;
 }
 
 .panel {
@@ -124,11 +132,17 @@ canvas#board {
   font-size: 1rem;
 }
 
+.panel.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem 0.8rem;
+}
+
 .panel.stats div {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.18rem 0;
+  padding: 0.12rem 0;
   font-variant-numeric: tabular-nums;
 }
 

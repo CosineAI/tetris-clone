@@ -30,6 +30,7 @@
   let BLOCK = 30; // dynamically resized
   let nextCell = 22; // dynamically resized
   let holdCell = 24; // dynamically resized
+  let nextItemsToShow = 5; // dynamically adjusted to fit
 
   // Shapes
   const SHAPES = {
@@ -444,7 +445,7 @@
 
   function drawNext() {
     clearCanvas(nextCtx, nextEl.width, nextEl.height);
-    const items = queue.slice(0, 5);
+    const items = queue.slice(0, nextItemsToShow);
     const cell = nextCell;
     let yOff = 6;
 
@@ -655,18 +656,37 @@
     boardEl.width = COLS * BLOCK;
     boardEl.height = ROWS * BLOCK;
 
-    // Side panels scale with board size
-    nextCell = Math.max(16, Math.floor(BLOCK * 0.72));
-    holdCell = Math.max(16, Math.floor(BLOCK * 0.84));
+    // Side panels scale with board size (slightly smaller than board tiles)
+    nextCell = Math.max(14, Math.floor(BLOCK * 0.66));
+    holdCell = Math.max(14, Math.floor(BLOCK * 0.72));
 
-    // Next preview canvas accommodates 5 pieces
-    const items = 5;
-    nextEl.width = nextCell * 6;
-    nextEl.height = items * (nextCell * 4 + 12) + 6;
+    // Decide how many Next items fit alongside Hold, Stats, and Buttons
+    const holdSize = holdCell * 4 + 16; // square canvas size
+    const nextHeightFor = (n) => n * (nextCell * 4 + 12) + 6;
+    let items = 5;
 
-    // Hold canvas as a roomy square
-    holdEl.width = holdCell * 6;
-    holdEl.height = holdCell * 6;
+    // Rough allowance for other panels and spacing
+    const otherAllowance = 200; // stats + buttons + panel gaps
+    let availableForNext = boardEl.height - holdSize - otherAllowance;
+
+    while (items > 3 && nextHeightFor(items) > availableForNext) {
+      items--;
+    }
+    nextItemsToShow = items;
+
+    // Next preview canvas width is tight around a 4x4 mini grid
+    nextEl.width = nextCell * 4 + 16;
+    nextEl.height = nextHeightFor(items);
+
+    // Hold canvas as a compact square
+    holdEl.width = holdSize;
+    holdEl.height = holdSize;
+
+    // Constrain sidebar height to board height
+    const sidebar = document.querySelector(".sidebar");
+    if (sidebar) {
+      sidebar.style.maxHeight = boardEl.height + "px";
+    }
 
     // Redraw with new sizes
     drawBoard();

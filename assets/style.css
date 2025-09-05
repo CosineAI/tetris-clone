@@ -38,7 +38,7 @@ main {
   justify-content: center;
   min-height: 82vh;
   position: relative;
-  overflow-y: auto;
+  overflow: visible; /* avoid internal scrollbars */
 }
 
 footer {
@@ -117,7 +117,7 @@ canvas#board {
   flex-direction: column;
   gap: 0.8rem;
   min-width: 180px;
-  overflow: auto;
+  overflow: visible; /* no inner scrollbars */
 }
 
 .panel {

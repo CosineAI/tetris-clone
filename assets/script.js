@@ -24,6 +24,13 @@
   nextCtx.imageSmoothingEnabled = false;
   holdCtx.imageSmoothingEnabled = false;
 
+  // Panels
+  const sidebarEl = document.querySelector(".sidebar");
+  const statsPanelEl = document.querySelector(".panel.stats");
+  const buttonsPanelEl = document.querySelector(".panel.buttons");
+  const nextPanelEl = nextEl.parentElement;
+  const holdPanelEl = holdEl.parentElement;
+
   // Game constants
   const COLS = 10;
   const ROWS = 20;
@@ -650,43 +657,75 @@
     // Target about 80% of viewport height for the board
     const desiredBoardHeight = Math.floor(window.innerHeight * 0.80);
     const newBlock = Math.floor(desiredBoardHeight / ROWS);
-    BLOCK = Math.max(24, Math.min(48, newBlock));
+    BLOCK = Math.max(20, Math.min(48, newBlock));
 
     // Set board canvas size
     boardEl.width = COLS * BLOCK;
     boardEl.height = ROWS * BLOCK;
 
-    // Side panels scale with board size (slightly smaller than board tiles)
-    nextCell = Math.max(14, Math.floor(BLOCK * 0.66));
-    holdCell = Math.max(14, Math.floor(BLOCK * 0.72));
+    // Initial guesses for mini-cells
+    nextCell = Math.max(12, Math.floor(BLOCK * 0.64));
+    holdCell = Math.max(12, Math.floor(BLOCK * 0.70));
 
-    // Decide how many Next items fit alongside Hold, Stats, and Buttons
-    const holdSize = holdCell * 4 + 16; // square canvas size
-    const nextHeightFor = (n) => n * (nextCell * 4 + 12) + 6;
+    // Measure static parts of the sidebar
+    const gapPx = sidebarEl ? parseFloat(getComputedStyle(sidebarEl).gap) || 0 : 0;
+    const statsH = statsPanelEl ? statsPanelEl.offsetHeight : 0;
+    const buttonsH = buttonsPanelEl ? buttonsPanelEl.offsetHeight : 0;
+
+    // Overheads (panel padding + h2 heights etc.) computed as total minus canvas
+    const overheadNext = nextPanelEl ? (nextPanelEl.offsetHeight - nextEl.offsetHeight) : 0;
+    const overheadHold = holdPanelEl ? (holdPanelEl.offsetHeight - holdEl.offsetHeight) : 0;
+
+    // Available height budget for the two canvases combined
+    const gapsCount = 3; // between 4 panels in the sidebar
+    const availableForCanvases = Math.max(
+      0,
+      boardEl.height - statsH - buttonsH - overheadNext - overheadHold - gapsCount * gapPx
+    );
+
+    // Start with up to 5 next items and adjust to fit
     let items = 5;
+    const minItems = 3;
 
-    // Rough allowance for other panels and spacing
-    const otherAllowance = 200; // stats + buttons + panel gaps
-    let availableForNext = boardEl.height - holdSize - otherAllowance;
+    const nextHeightFor = (n, cell) => n * (cell * 4 + 12) + 6;
+    const holdSizeFor = (cell) => cell * 4 + 16;
 
-    while (items > 3 && nextHeightFor(items) > availableForNext) {
+    let nextH = nextHeightFor(items, nextCell);
+    let holdH = holdSizeFor(holdCell);
+
+    // Reduce items first if needed
+    while (items > minItems && nextH + holdH > availableForCanvases) {
       items--;
+      nextH = nextHeightFor(items, nextCell);
     }
+
+    // If still doesn't fit, scale down mini-cell sizes proportionally
+    if (nextH + holdH > availableForCanvases && availableForCanvases > 0) {
+      const scale = Math.max(0.5, Math.min(1, availableForCanvases / (nextH + holdH)));
+      nextCell = Math.max(10, Math.floor(nextCell * scale));
+      holdCell = Math.max(10, Math.floor(holdCell * scale));
+      nextH = nextHeightFor(items, nextCell);
+      holdH = holdSizeFor(holdCell);
+    }
+
+    // Ensure not exceeding available height
+    if (nextH + holdH > availableForCanvases) {
+      // Final clamp: reduce next items to min and shrink a bit more
+      items = minItems;
+      nextCell = Math.max(10, Math.floor(nextCell * 0.92));
+      holdCell = Math.max(10, Math.floor(holdCell * 0.92));
+      nextH = nextHeightFor(items, nextCell);
+      holdH = holdSizeFor(holdCell);
+    }
+
     nextItemsToShow = items;
 
-    // Next preview canvas width is tight around a 4x4 mini grid
+    // Set canvases to computed sizes
     nextEl.width = nextCell * 4 + 16;
-    nextEl.height = nextHeightFor(items);
+    nextEl.height = nextH;
 
-    // Hold canvas as a compact square
-    holdEl.width = holdSize;
-    holdEl.height = holdSize;
-
-    // Constrain sidebar height to board height
-    const sidebar = document.querySelector(".sidebar");
-    if (sidebar) {
-      sidebar.style.maxHeight = boardEl.height + "px";
-    }
+    holdEl.width = holdH;
+    holdEl.height = holdH;
 
     // Redraw with new sizes
     drawBoard();

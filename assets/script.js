@@ -27,7 +27,9 @@
   // Game constants
   const COLS = 10;
   const ROWS = 20;
-  const BLOCK = 30;
+  let BLOCK = 30; // dynamically resized
+  let nextCell = 22; // dynamically resized
+  let holdCell = 24; // dynamically resized
 
   // Shapes
   const SHAPES = {
@@ -244,12 +246,12 @@
 
   function merge(grid, p) {
     const m = p.matrix;
-    for (let y = 0; y &lt; m.length; y++) {
-      for (let x = 0; x &lt; m[y].length; x++) {
+    for (let y = 0; y < m.length; y++) {
+      for (let x = 0; x < m[y].length; x++) {
         if (m[y][x]) {
           const ny = p.y + y;
           const nx = p.x + x;
-          if (ny &gt;= 0) {
+          if (ny >= 0) {
             grid[ny][nx] = document.body.classList.contains("theme-crazy")
               ? { type: p.type, color: p.color }
               : p.type;
@@ -443,7 +445,7 @@
   function drawNext() {
     clearCanvas(nextCtx, nextEl.width, nextEl.height);
     const items = queue.slice(0, 5);
-    const cell = 22;
+    const cell = nextCell;
     let yOff = 6;
 
     for (const t of items) {
@@ -455,7 +457,7 @@
   function drawHold() {
     clearCanvas(holdCtx, holdEl.width, holdEl.height);
     if (holdType == null) return;
-    drawMini(holdCtx, SHAPES[holdType], holdType, 6, 6, 24);
+    drawMini(holdCtx, SHAPES[holdType], holdType, 6, 6, holdCell);
   }
 
   function drawMini(c, m, type, ox, oy, s) {
@@ -631,8 +633,8 @@
   }
 
   function applyCrazyColorsToBoard() {
-    for (let y = 0; y &lt; ROWS; y++) {
-      for (let x = 0; x &lt; COLS; x++) {
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
         const v = board[y][x];
         if (!v) continue;
         if (typeof v !== "object") {
@@ -642,10 +644,39 @@
     }
   }
 
-  // Init
-  function init() {
+  // Responsive sizing for board and side canvases
+  function resize() {
+    // Target about 80% of viewport height for the board
+    const desiredBoardHeight = Math.floor(window.innerHeight * 0.80);
+    const newBlock = Math.floor(desiredBoardHeight / ROWS);
+    BLOCK = Math.max(24, Math.min(48, newBlock));
+
+    // Set board canvas size
     boardEl.width = COLS * BLOCK;
     boardEl.height = ROWS * BLOCK;
+
+    // Side panels scale with board size
+    nextCell = Math.max(16, Math.floor(BLOCK * 0.72));
+    holdCell = Math.max(16, Math.floor(BLOCK * 0.84));
+
+    // Next preview canvas accommodates 5 pieces
+    const items = 5;
+    nextEl.width = nextCell * 6;
+    nextEl.height = items * (nextCell * 4 + 12) + 6;
+
+    // Hold canvas as a roomy square
+    holdEl.width = holdCell * 6;
+    holdEl.height = holdCell * 6;
+
+    // Redraw with new sizes
+    drawBoard();
+    drawNext();
+    drawHold();
+  }
+
+  // Init
+  function init() {
+    resize();
 
     highScore = parseInt(localStorage.getItem("tetrisHighScore") || "0", 10);
     updateHUD();
@@ -654,6 +685,7 @@
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("resize", resize);
     startBtn.addEventListener("click", newGame);
     pauseBtn.addEventListener("click", togglePause);
     overlayBtn.addEventListener("click", newGame);

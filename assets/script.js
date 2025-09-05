@@ -151,6 +151,12 @@
     return getPalette()[t];
   }
 
+  // Color to use for a newly spawned active piece
+  function getNewPieceColor(t) {
+    if (document.body.classList.contains("theme-crazy")) return brightColor();
+    return getPalette()[t];
+  }
+
   // Queue / Bag
   function refillQueueIfNeeded() {
     if (queue.length < 7) {
@@ -167,7 +173,7 @@
   function spawnPiece() {
     const type = nextType();
     const matrix = cloneMatrix(SHAPES[type]);
-    const color = getPieceColor(type);
+    const color = getNewPieceColor(type);
 
     const p = {
       type,
@@ -238,12 +244,16 @@
 
   function merge(grid, p) {
     const m = p.matrix;
-    for (let y = 0; y < m.length; y++) {
-      for (let x = 0; x < m[y].length; x++) {
+    for (let y = 0; y &lt; m.length; y++) {
+      for (let x = 0; x &lt; m[y].length; x++) {
         if (m[y][x]) {
           const ny = p.y + y;
           const nx = p.x + x;
-          if (ny >= 0) grid[ny][nx] = p.type;
+          if (ny &gt;= 0) {
+            grid[ny][nx] = document.body.classList.contains("theme-crazy")
+              ? { type: p.type, color: p.color }
+              : p.type;
+          }
         }
       }
     }
@@ -325,7 +335,7 @@
         matrix,
         x: ((COLS / 2) | 0) - ((matrix[0].length / 2) | 0),
         y: -getTopPadding(matrix),
-        color: getPieceColor(swap)
+        color: getNewPieceColor(swap)
       };
       if (collide(board, piece)) {
         gameOver();
@@ -373,9 +383,17 @@
 
     for (let y = 0; y < ROWS; y++) {
       for (let x = 0; x < COLS; x++) {
-        const t = board[y][x];
-        if (!t) continue;
-        drawCell(ctx, x * BLOCK, y * BLOCK, getPieceColor(t));
+        const cell = board[y][x];
+        if (!cell) continue;
+        let color;
+        if (document.body.classList.contains("theme-crazy")) {
+          if (typeof cell === "object" && cell.color) color = cell.color;
+          else color = brightColor();
+        } else {
+          const t = typeof cell === "object" ? cell.type : cell;
+          color = getPalette()[t];
+        }
+        drawCell(ctx, x * BLOCK, y * BLOCK, color);
       }
     }
     if (piece) drawGhost();
@@ -594,9 +612,15 @@
     document.body.classList.remove("theme-light", "theme-dark", "theme-crazy");
     document.body.classList.add(`theme-${name}`);
     theme = name === "dark" ? "dark" : "light";
-    if (name === "crazy") refreshCrazyPalette();
-    else CRAZY_PALETTE = null;
-    if (piece) piece.color = getPieceColor(piece.type);
+    if (name === "crazy") {
+      refreshCrazyPalette();
+      applyCrazyColorsToBoard();
+    } else {
+      CRAZY_PALETTE = null;
+    }
+    if (piece) {
+      piece.color = name === "crazy" ? brightColor() : getPalette()[piece.type];
+    }
     localStorage.setItem("tetrisTheme", name);
   }
 
@@ -604,6 +628,18 @@
     const saved = localStorage.getItem("tetrisTheme") || "dark";
     themeSelect.value = saved;
     setTheme(saved);
+  }
+
+  function applyCrazyColorsToBoard() {
+    for (let y = 0; y &lt; ROWS; y++) {
+      for (let x = 0; x &lt; COLS; x++) {
+        const v = board[y][x];
+        if (!v) continue;
+        if (typeof v !== "object") {
+          board[y][x] = { type: v, color: brightColor() };
+        }
+      }
+    }
   }
 
   // Init

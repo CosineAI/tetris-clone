@@ -3,13 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Static Site</title>
+  <title>Tetris Clone</title>
   <link rel="stylesheet" href="assets/style.css">
 </head>
-<body>
-  <main>
-    <h1>Welcome to Your Static Site</h1>
+<body class="theme-dark">
+  <main class="tetris-app">
+    <div class="topbar">
+      <h1 class="app-title">Tetris</h1>
+      <div class="theme-controls">
+        <label for="themeSelect">Theme</label>
+        <select id="themeSelect" aria-label="Theme selector">
+          <option value="light">Light</option>
+          <option value="dark" selected>Dark</option>
+          <option value="crazy">Crazy Color</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="game">
+      <canvas id="board" width="300" height="600" aria-label="Tetris board"></canvas>
+
+      <aside class="sidebar" aria-label="Game side panel">
+        <div class="panel">
+          <h2>Next</h2>
+          <canvas id="next" width="120" height="520" aria-label="Next pieces"></canvas>
+        </div>
+
+        <div class="panel">
+          <h2>Hold</h2>
+          <canvas id="hold" width="120" height="120" aria-label="Hold piece"></canvas>
+        </div>
+
+        <div class="panel stats">
+          <div>Score <span id="score">0</span></div>
+          <div>Lines <span id="lines">0</span></div>
+          <div>Level <span id="level">0</span></div>
+          <div>High <span id="highScore">0</span></div>
+        </div>
+
+        <div class="panel buttons">
+          <button id="startBtn" class="btn">New Game</button>
+          <button id="pauseBtn" class="btn" aria-pressed="false">Pause</button>
+        </div>
+      </aside>
+    </div>
+
+    <div class="instructions">
+      <p>
+        Controls: Left/Right to move • Down for quick drop • Up for instant drop • Z/X to rotate • Space to hold • P to pause
+      </p>
+    </div>
+
+    <div id="overlay" class="overlay hidden" role="dialog" aria-modal="true">
+      <div class="dialog">
+        <h2 id="overlayTitle">Game Over</h2>
+        <p id="overlayText"></p>
+        <button id="overlayBtn" class="btn">Play Again</button>
+      </div>
+    </div>
   </main>
+
   <footer>
     <p>&copy; 2025 Your Name</p>
   </footer>

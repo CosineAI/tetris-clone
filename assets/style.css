@@ -26,8 +26,7 @@ header {
 
 main {
   flex: 1 0 auto;
-  max-width: 750px;
-  width: 100%;
+  width: min(1200px, 100% - 16px); /* centered with 8px min side spacing */
   margin: 2.2rem auto 0 auto;
   background: #fff;
   padding: 2.8rem 2.2rem 2.4rem;
@@ -36,9 +35,9 @@ main {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 65vh;
+  min-height: 82vh;
   position: relative;
-  overflow-y: auto;
+  overflow: visible; /* avoid internal scrollbars */
 }
 
 footer {
@@ -59,4 +58,212 @@ footer {
     padding: 1.2rem 1rem 1.3rem;
   }
 
+}
+
+/* ====== Tetris App Styles ====== */
+.tetris-app { /* centered via main width; min side spacing handled there */ }
+.tetris-app .topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.app-title {
+  margin: 0;
+  font-size: 1.6rem;
+  letter-spacing: 0.02em;
+}
+
+.theme-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.theme-controls select {
+  padding: 0.45rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.1);
+  background: inherit;
+  color: inherit;
+  outline: none;
+}
+
+.game {
+  display: flex;
+  gap: 1.2rem;
+  align-items: stretch;
+  justify-content: center;
+}
+
+canvas#board {
+  background: rgba(0,0,0,0.08);
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  image-rendering: pixelated;
+}
+
+/* Scale mini canvases to fit panel width */
+.panel canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  min-width: 180px;
+  overflow: visible; /* no inner scrollbars */
+}
+
+.panel {
+  background: rgba(255,255,255,0.96);
+  border-radius: 12px;
+  padding: 0.8rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.panel h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.panel.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem 0.8rem;
+}
+
+.panel.stats div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.12rem 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel.buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.btn {
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  border-radius: 10px;
+  background: #3559e0;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.2s ease;
+  box-shadow: 0 6px 16px rgba(42,54,96,0.28);
+}
+
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); box-shadow: 0 2px 6px rgba(42,54,96,0.28); }
+
+.instructions {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+/* Overlay */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.overlay .dialog {
+  background: #fff;
+  color: #111827;
+  padding: 1.2rem 1rem;
+  border-radius: 12px;
+  min-width: 260px;
+  text-align: center;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+}
+
+/* Dark theme overrides */
+body.theme-dark {
+  background: radial-gradient(1200px 600px at 20% 10%, #0f172a 0%, #0b1220 30%, #070d1a 100%);
+  color: #e5e7eb;
+}
+
+body.theme-dark main {
+  background: #0b1220;
+  color: #e5e7eb;
+  box-shadow: 0 6px 32px 0 rgba(7, 12, 26, 0.8), 0 1.5px 6px 0 rgba(0,0,0,0.4);
+}
+
+body.theme-dark canvas#board {
+  background: rgba(255,255,255,0.06);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+}
+
+body.theme-dark .panel {
+  background: #0f172a;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+}
+
+body.theme-dark .overlay .dialog {
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+/* Crazy Color theme */
+body.theme-crazy {
+  background: linear-gradient(120deg, #ff00cc, #3333ff, #00e5ff, #00ff85, #ffd000);
+  background-size: 400% 400%;
+  animation: hueShift 12s ease infinite;
+  color: #111;
+}
+
+body.theme-crazy main {
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(6px);
+  color: #111;
+}
+
+body.theme-crazy canvas#board {
+  background: rgba(0,0,0,0.07);
+}
+
+body.theme-crazy .panel {
+  background: rgba(255,255,255,0.9);
+}
+
+@keyframes hueShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@media (max-width: 980px) {
+  .game {
+    flex-direction: column;
+    align-items: center;
+  }
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    justify-content: center;
+  }
+  .panel.buttons {
+    grid-template-columns: 1fr 1fr;
+  }
 }
